@@ -95,7 +95,7 @@ def reflect_about(x, axis):
         return axis + (axis - x)
 
 
-def map_freq_to_current(pulse, current, freq, plot_fit, lo_freq):
+def map_freq_to_current(pulse, current, freq, plot_fit, lo_freq, flip_point):
     opt_params = cosine_fit(current=current, freq=freq)
     print(f"cos curve params are: {opt_params}")
     if plot_fit:
@@ -114,16 +114,6 @@ def map_freq_to_current(pulse, current, freq, plot_fit, lo_freq):
     # Get the current where freq is max based on fitting
     max_freq_point = opt_params[0] - opt_params[3]
     max_freq_point_current = arccosine_fn(max_freq_point, *opt_params)
-
-    # We need to find which point of the curve we're on
-    if starting_level > max_freq_point:
-        # means we're to the right max freq point, freq goes down as current increases
-        # since arccos gives results from 0-pi, we don't need to flip the point about the
-        # middle
-        flip_point = False
-    else:
-        # means we're to the left of the max freq point, freq increases with current
-        flip_point = True
 
     current_points = np.zeros(len(pulse))
     for i in range(len(pulse)):

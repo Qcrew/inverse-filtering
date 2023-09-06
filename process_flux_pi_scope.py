@@ -16,6 +16,14 @@ CLOCK_PERIOD = 4e-9  # It is unlikely that this should ever be changed
 PLOT_INDIVIDUAL_FITS = False
 PLOT_FINAL_GRAPH = True
 
+# Set to FALSE if we're to the right max freq point (freq goes down as current increases)
+# since np.arccos gives results from 0-pi, we don't need to flip the point about the
+# middle.
+# Set to TRUE if we're to the left of the max freq point (freq goes up as current increases)
+# we need to flip our result about the max freq point.
+
+FLIP_POINT = True
+
 lo_freq = 6.46289425e9 - 120e6 - 200e6 - 230e6
 current = np.array(
     [15.4, 8.08, 8.05, 8, 7.8, 7.5, 7.3, 6.8, 6.5, 6.3, 5.9, 5.5, 5.3, 4.9]
@@ -108,7 +116,7 @@ def convert_flux_pi_plot(
             plt.show()
     print("---------------------- DONE ----------------------")
 
-    fit_data = map_freq_to_current(fit_data, current, freq, True, lo_freq)
+    fit_data = map_freq_to_current(fit_data, current, freq, True, lo_freq, FLIP_POINT)
 
     print("---------- CONVERTING TIMESCALE FROM CLOCK CYCLES TO NS ----------")
     time_delay_ns = time_delay * CLOCK_PERIOD
