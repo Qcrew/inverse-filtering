@@ -44,12 +44,22 @@ DISP = 500
 IIR_SAMPLE_POINTS = [
     [150 + DISP, 2000 + DISP],
     [1000 + DISP, 2000 + DISP],
+    [100 + DISP, 500 + DISP],
+    [100 + DISP, 500 + DISP],
+    [500 + DISP, 2000 + DISP],
+    [500 + DISP, 2000 + DISP],
+    [500 + DISP, 2000 + DISP],
 ]
 
 # Define bounds for parameters a, b, tau of each IIR fitting. Default if None.
 IIR_PARAM_BOUNDS = [
     ((0, 0, 0), (2.0, np.inf, np.inf)),
-    ((0, 0, 0), (2.0, np.inf, np.inf))
+    ((0, 0, 0), (2.0, np.inf, np.inf)),
+    ((0, -np.inf, 0), (2.0, 0, np.inf)),
+    ((0, -np.inf, 0), (2.0, 0, np.inf)),
+    ((0, 0, 0), (2.0, np.inf, np.inf)),
+    ((0, 0, 0), (2.0, np.inf, np.inf)),
+    ((0, 0, 0), (2.0, np.inf, np.inf)),
     # ((0, -np.inf, 0), (2.0, 0, np.inf)),
     # ((0, -np.inf, 0), (2.0, 0, np.inf)),
     # ((0, -np.inf, 0), (10.0, 0, np.inf)),
@@ -57,7 +67,12 @@ IIR_PARAM_BOUNDS = [
 
 IIR_PARAM_GUESS = [
     (0.0, 1, 1000e-9),
-    (0.0, 1, 1000e-9)
+    (0.0, 1, 1000e-9),
+    (0.5, -1, 1000e-9),
+    (0.5, -1, 1000e-9),
+    (0.0, 1, 1000e-9),
+    (0.0, 1, 1000e-9),
+    (0.0, 1, 1000e-9),
     # (0.5, -1, 200e-9),
     # (0.5, -1, 1000e-9),
 ]
@@ -70,14 +85,14 @@ DO_FIR = 1
 FIR_FILTER_NUM = 1
 FIR_FILTERS = [None] * FIR_FILTER_NUM
 FIR_SAMPLE_POINTS = [
-    [13 * 4 + DISP, 250 * 4 + DISP],
+    [0 * 4 + DISP, 350 * 4 + DISP],
 ]  # in ns
 STEP_DELAYS = [
-    4 * 4 + DISP - 0 * 4 - DISP,
+    20 * 4 + DISP - 0 * 4 - DISP,
 ]  # where you want the target to be, relative to the sample points
 PLOT_FIR_SAMPLES = 1
 PLOT_INTERMEDIATE_FIR_RESULTS = 1
-FIR_REGULARIZER_WEIGHT = 0.05  # 0.05
+FIR_REGULARIZER_WEIGHT = 1  # 0.05
 EXTEND_FIR_CORRECTION = 500
 
 ###  Other Plotting Options ###

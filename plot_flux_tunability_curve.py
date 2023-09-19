@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 current = np.array(
-    [15.4, 8.08, 8.05, 8, 7.8, 7.5, 7.3, 6.8, 6.5, 6.3, 5.9, 5.5, 5.3, 4.9]
+    [15.4, 8.08, 8.05, 8, 7.8, 7.5, 7.3, 6.8, 6.5, 6.3, 5.9, 5.5, 5.3, 4.9, 2.7]
 )
 freq = np.array(
     [
@@ -22,12 +22,13 @@ freq = np.array(
         5.0322,
         4.9715,
         4.8453,
+        4.1345,
     ]
 )
 
 
 def cosine_fn(current, a, omega, psi, b):
-    return (a * np.cos((omega * current) + psi)) + b
+    return np.abs((a * np.cos((omega * current) + psi)) + b)
 
 
 def simple_cosine_fn(current, a, omega, psi):
@@ -39,8 +40,11 @@ def simple_arccosine_fn(freq, a, omega, b):
 
 
 def arccosine_fn(freq, a, omega, psi, b):
-    # print(np.arccos((freq - b) / a))
-    return (np.arccos((freq - b) / a) - psi) / omega
+    return np.abs((np.arccos((freq - b) / a) - psi) / omega)
+
+
+def get_max_point(a, omega, psi, b):
+    return np.abs((np.arccos(1.0) - psi) / omega)
 
 
 def cosine_simple_fit(current, freq):
@@ -66,19 +70,19 @@ def cosine_simple_fit(current, freq):
 def cosine_fit(current, freq):
     a_guess = max(freq) - min(freq)
     b_guess = min(freq)
-    psi_guess = -1 * (15.4 % (2 * np.pi))
-    omega_guess = 1
+    psi_guess = 0
+    omega_guess = (2 * np.pi) / (4 * (max(current) - min(current)))
 
     popt, pcov = curve_fit(
         cosine_fn,
         current,
         freq,
         bounds=(
-            (0, 0, -np.inf, 0),
-            (np.inf, np.inf, np.inf, min(freq)),
+            (0, 0, -2 * np.pi, 0),
+            (np.inf, np.inf, 2 * np.pi, min(freq)),
         ),
         p0=[a_guess, omega_guess, psi_guess, b_guess],
-        maxfev=5000,
+        maxfev=8000,
     )
 
     # small changes in b don't make the fit anymore accurate but can
@@ -109,11 +113,8 @@ def map_freq_to_current(pulse, current, freq, plot_fit, lo_freq, flip_point):
         plt.scatter(current, freq, label="data")
         plt.show()
 
-    starting_level = pulse[0]
-    end_level = pulse[-1]
     # Get the current where freq is max based on fitting
-    max_freq_point = opt_params[0] - opt_params[3]
-    max_freq_point_current = arccosine_fn(max_freq_point, *opt_params)
+    max_freq_point_current = get_max_point(*opt_params)
 
     current_points = np.zeros(len(pulse))
     for i in range(len(pulse)):
@@ -128,22 +129,22 @@ def map_freq_to_current(pulse, current, freq, plot_fit, lo_freq, flip_point):
 if __name__ == "__main__":
     curr_opt = cosine_fit(current=current, freq=freq)
     print(curr_opt)
-    current_sweep = np.arange(4, 20, 0.1)
+    current_sweep = np.arange(0, 20, 0.1)
     plt.plot(
         current_sweep, [cosine_fn(i, *curr_opt) for i in current_sweep], label="data"
     )
     plt.scatter(current, freq)
     plt.show()
 
-    y = arccosine_fn(curr_opt[0], *curr_opt)
-    print(y)
+    max_point = get_max_point(*curr_opt)
+    print(max_point)
     # print(cosine_fn(y, *curr_opt))
     # offset = current[0] - y
 
-    z = arccosine_fn(freq[6] - min(freq), *curr_opt)
-    neg_z = reflect_about(z, y)
+    z = arccosine_fn(freq[6], *curr_opt)
+    neg_z = reflect_about(z, max_point)
     print(z)
     print(neg_z)
-    print(freq[6] - min(freq))
+    print(freq[6])
     print(cosine_fn(z, *curr_opt))
     print(cosine_fn(neg_z, *curr_opt))
