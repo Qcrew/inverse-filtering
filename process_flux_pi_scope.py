@@ -22,6 +22,7 @@ PLOT_FINAL_GRAPH = True
 # Set to TRUE if we're to the left of the max freq point (freq goes up as current increases)
 # we need to flip our result about the max freq point.
 FLIP_POINT = True
+MAP_TO_FLUX_CURVE = True
 
 lo_freq = 6.46289425e9 - 120e6 - 200e6 - 230e6
 current = np.array(
@@ -117,7 +118,10 @@ def convert_flux_pi_plot(
     print("---------------------- DONE ----------------------")
 
     freq_response = fit_data
-    fit_data = map_freq_to_current(fit_data, current, freq, True, lo_freq, FLIP_POINT)
+    if MAP_TO_FLUX_CURVE:
+        fit_data = map_freq_to_current(
+            fit_data, current, freq, True, lo_freq, FLIP_POINT
+        )
 
     print("---------- CONVERTING TIMESCALE FROM CLOCK CYCLES TO NS ----------")
     time_delay_ns = time_delay * CLOCK_PERIOD
