@@ -5,7 +5,7 @@ from scipy.optimize import curve_fit
 
 current = np.array(
     [15.4, 8.08, 8.05, 8, 7.8, 7.5, 7.3, 6.8, 6.5, 6.3, 5.9, 5.5, 5.3, 4.9, 2.7]
-)
+)  # in mA
 freq = np.array(
     [
         6.413,
@@ -24,71 +24,37 @@ freq = np.array(
         4.8453,
         4.1345,
     ]
-)
+)  # in GHz
 
 
-def cosine_fn(current, a, omega, psi, b):
-    return np.abs((a * np.cos((omega * current) + psi)) + b)
+def cosine_fn(current, a, omega, psi):
+    return a * np.sqrt(np.abs(np.cos(omega * current + psi)))
 
 
-def simple_cosine_fn(current, a, omega, psi):
-    return a * np.cos((omega * current) + psi)
+def arccosine_fn(freq, a, omega, psi):
+    return (np.arccos(np.abs(freq**2 / a**2)) - psi) / omega
 
 
-def simple_arccosine_fn(freq, a, omega, b):
-    return (np.arccos((freq - b) / a)) / omega
-
-
-def arccosine_fn(freq, a, omega, psi, b):
-    return np.abs((np.arccos((freq - b) / a) - psi) / omega)
-
-
-def get_max_point(a, omega, psi, b):
-    return np.abs((np.arccos(1.0) - psi) / omega)
-
-
-def cosine_simple_fit(current, freq):
-    a_guess = max(freq) - min(freq)
-    psi_guess = -1 * (15.4 % (2 * np.pi))
-    omega_guess = 0.1
-
-    popt, pcov = curve_fit(
-        simple_cosine_fn,
-        current,
-        freq,
-        bounds=(
-            (0, 0, -np.inf),
-            (np.inf, 1, np.inf),
-        ),
-        p0=[a_guess, omega_guess, psi_guess],
-        maxfev=5000,
-    )
-
-    return popt
+def get_max_point(a, omega, psi):
+    return (np.arccos(1.0) - psi) / omega
 
 
 def cosine_fit(current, freq):
-    a_guess = max(freq) - min(freq)
-    b_guess = min(freq)
+    a_guess = max(freq)
     psi_guess = 0
-    omega_guess = (2 * np.pi) / (4 * (max(current) - min(current)))
+    omega_guess = (2 * np.pi) / 66
 
     popt, pcov = curve_fit(
         cosine_fn,
         current,
         freq,
         bounds=(
-            (0, 0, -2 * np.pi, 0),
-            (np.inf, np.inf, 2 * np.pi, min(freq)),
+            (0, 0, -2 * np.pi),
+            (np.inf, np.inf, 2 * np.pi),
         ),
-        p0=[a_guess, omega_guess, psi_guess, b_guess],
+        p0=[a_guess, omega_guess, psi_guess],
         maxfev=8000,
     )
-
-    # small changes in b don't make the fit anymore accurate but can
-    # cause significant errors when you do arccos.
-    if popt[3] < 1e-3:
-        popt[3] = 0
     return popt
 
 
@@ -131,7 +97,9 @@ if __name__ == "__main__":
     print(curr_opt)
     current_sweep = np.arange(0, 20, 0.1)
     plt.plot(
-        current_sweep, [cosine_fn(i, *curr_opt) for i in current_sweep], label="data"
+        current_sweep,
+        [cosine_fn(i, *curr_opt) for i in current_sweep],
+        label="data",
     )
     plt.scatter(current, freq)
     plt.show()

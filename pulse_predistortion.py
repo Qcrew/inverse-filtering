@@ -45,9 +45,6 @@ IIR_SAMPLE_POINTS = [
     [150 + DISP, 2000 + DISP],
     [1000 + DISP, 2000 + DISP],
     [100 + DISP, 500 + DISP],
-    [100 + DISP, 500 + DISP],
-    [500 + DISP, 2000 + DISP],
-    [500 + DISP, 2000 + DISP],
     [500 + DISP, 2000 + DISP],
 ]
 
@@ -56,9 +53,6 @@ IIR_PARAM_BOUNDS = [
     ((0, 0, 0), (2.0, np.inf, np.inf)),
     ((0, 0, 0), (2.0, np.inf, np.inf)),
     ((0, -np.inf, 0), (2.0, 0, np.inf)),
-    ((0, -np.inf, 0), (2.0, 0, np.inf)),
-    ((0, 0, 0), (2.0, np.inf, np.inf)),
-    ((0, 0, 0), (2.0, np.inf, np.inf)),
     ((0, 0, 0), (2.0, np.inf, np.inf)),
     # ((0, -np.inf, 0), (2.0, 0, np.inf)),
     # ((0, -np.inf, 0), (2.0, 0, np.inf)),
@@ -69,9 +63,6 @@ IIR_PARAM_GUESS = [
     (0.0, 1, 1000e-9),
     (0.0, 1, 1000e-9),
     (0.5, -1, 1000e-9),
-    (0.5, -1, 1000e-9),
-    (0.0, 1, 1000e-9),
-    (0.0, 1, 1000e-9),
     (0.0, 1, 1000e-9),
     # (0.5, -1, 200e-9),
     # (0.5, -1, 1000e-9),
@@ -85,10 +76,10 @@ DO_FIR = 1
 FIR_FILTER_NUM = 1
 FIR_FILTERS = [None] * FIR_FILTER_NUM
 FIR_SAMPLE_POINTS = [
-    [0 * 4 + DISP, 350 * 4 + DISP],
+    [10 * 4 + DISP, 150 * 4 + DISP],
 ]  # in ns
 STEP_DELAYS = [
-    20 * 4 + DISP - 0 * 4 - DISP,
+    12 * 4 + DISP - 0 * 4 - DISP,
 ]  # where you want the target to be, relative to the sample points
 PLOT_FIR_SAMPLES = 1
 PLOT_INTERMEDIATE_FIR_RESULTS = 1
@@ -158,49 +149,20 @@ if DO_FIR:
         estimated_stepfunction = np.zeros(len(sample))
         estimated_stepfunction[step_delay:] = 1
 
-        # if PLOT_INTERMEDIATE_FIR_RESULTS:
-        #     # fig, ax = plt.subplots(1, 2, figsize=(12, 5))
-        #     plt.title(f"FIR filter")
-        #     plt.plot(
-        #         time_points[start:end],
-        #         np.gradient(sample),
-        #         label="Corrected signal derivative",
-        #     )
-        #     plt.plot(
-        #         time_points[start:end],
-        #         sample,
-        #         label="Corrected signal derivative",
-        #     )
-        #     plt.plot(
-        #         time_points[start:end],
-        #         estimated_deltafunction,
-        #         label="Target signal derivative",
-        #     )
-        #     plt.show()
         fir_filter_step = fir_fitting(
             step_response=sample,
             expxected_response=np.gradient(estimated_stepfunction),
             alpha=FIR_REGULARIZER_WEIGHT,
             use_old_method=False,
         )
-        # fir_filter = fir_fitting(
-        #     step_response=sample,
-        #     expxected_response=np.gradient(estimated_stepfunction),
-        #     alpha=FIR_REGULARIZER_WEIGHT,
-        #     use_old_method=True,
-        # )
-        # print((fir_filter_step[0]))
-        print(f"FIR filter{i}: {fir_filter_step[0]}")
-        FIR_FILTERS[i] = fir_filter_step[0]
+
+        FIR_FILTERS[i] = fir_filter_step
         ### Extend corrected pulse in time to account for FIR smudging
         extend_curr_correction = np.concatenate(
             ([curr_correction[0]] * EXTEND_FIR_CORRECTION, curr_correction), axis=0
         )
-        # corrected_pulse_old = convolve(
-        #     extend_curr_correction, fir_filter_old.x, mode="same"
-        # )
         corrected_pulse_step = convolve(
-            extend_curr_correction, fir_filter_step[0], mode="same"
+            extend_curr_correction, fir_filter_step, mode="same"
         )
 
         prev_time_points = time_points
@@ -270,6 +232,7 @@ if PLOT_PREDISTORTED_PULSE:
     _, predistorted_pulse = square_pulse(
         on_time=400, lpad=200, rpad=2000, dt=SAMPLING_PERIOD, amp=1
     )
+    orig = predistorted_pulse
 
     pulse_time_points = np.arange(len(predistorted_pulse)) * SAMPLING_PERIOD
 
@@ -293,7 +256,9 @@ if PLOT_PREDISTORTED_PULSE:
     )  # normalize pulse as OPX only allows values from 0-1
 
     plt.plot(
-        pulse_time_points, predistorted_pulse_norm, label="fir filters", color="orange"
+        pulse_time_points, predistorted_pulse_norm, label="Distorted", color="orange"
     )
-    plt.title("Preview of a 2us predistorted square pulse")
+    plt.plot(pulse_time_points, orig, label="Original", color="blue")
+    plt.legend()
+    plt.title("Preview of a 400ns predistorted square pulse with 2us hold")
     plt.show()

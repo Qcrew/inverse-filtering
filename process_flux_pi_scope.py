@@ -21,7 +21,8 @@ PLOT_FINAL_GRAPH = True
 # middle.
 # Set to TRUE if we're to the left of the max freq point (freq goes up as current increases)
 # we need to flip our result about the max freq point.
-
+# This should be set to FALSE unless you really want to get the exact number on the other half
+# of the curve
 FLIP_POINT = True
 
 lo_freq = 6.46289425e9 - 120e6 - 200e6 - 230e6
@@ -117,6 +118,7 @@ def convert_flux_pi_plot(
             plt.show()
     print("---------------------- DONE ----------------------")
 
+    freq_response = fit_data
     fit_data = map_freq_to_current(fit_data, current, freq, True, lo_freq, FLIP_POINT)
 
     print("---------- CONVERTING TIMESCALE FROM CLOCK CYCLES TO NS ----------")
@@ -124,10 +126,30 @@ def convert_flux_pi_plot(
     num_points = 4 * max(time_delay)
     full_timesteps = np.linspace(time_delay_ns[0], max(time_delay_ns), num_points)
     converted_data = np.interp(full_timesteps, time_delay_ns, fit_data)
+    freq_response = np.interp(full_timesteps, time_delay_ns, freq_response)
     print("------------------------------ DONE ------------------------------")
 
     if plot_final:
-        plt.scatter(full_timesteps, converted_data)
+        fig, ax1 = plt.subplots()
+
+        color = "tab:red"
+        ax1.set_xlabel("current(mA))")
+        ax1.set_ylabel("flux", color=color)
+        p1 = ax1.plot(full_timesteps, converted_data, label="flux", color=color)
+        ax1.tick_params(axis="y", labelcolor=color)
+
+        ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+        color = "tab:blue"
+        ax2.set_ylabel(
+            "freq responmse", color=color
+        )  # we already handled the x-label with ax1
+        p2 = ax2.plot(full_timesteps, freq_response, label="freq response", color=color)
+        ax2.tick_params(axis="y", labelcolor=color)
+
+        plots = p1 + p2
+        labels = [l.get_label() for l in plots]
+        ax1.legend(plots, labels, loc=0)
         plt.show()
     return converted_data
 

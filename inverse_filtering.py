@@ -246,9 +246,11 @@ def fir_fitting(
             h=impulse_response, y=expxected_response, alpha=alpha
         )
         initial_guess = expxected_response
-        h_inv = least_squares(reg_function, initial_guess)
+        results = least_squares(reg_function, initial_guess)
+        h_inv = results.x
     else:
-        h_inv = linear_least_square(
+        results = linear_least_square(
             h=impulse_response, alpha=alpha, y=expxected_response
         )
+        h_inv = results[0]
     return h_inv
