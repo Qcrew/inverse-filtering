@@ -21,8 +21,6 @@ PLOT_FINAL_GRAPH = True
 # middle.
 # Set to TRUE if we're to the left of the max freq point (freq goes up as current increases)
 # we need to flip our result about the max freq point.
-# This should be set to FALSE unless you really want to get the exact number on the other half
-# of the curve
 FLIP_POINT = True
 
 lo_freq = 6.46289425e9 - 120e6 - 200e6 - 230e6
